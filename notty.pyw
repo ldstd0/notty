@@ -21,11 +21,8 @@ import sys, os
 
 sys.path.append ('src/')
 
-err_json = False
-err_tk = False
-err_ftypes = False
-err_syntax = False
-err_browser = False
+err_json = False ; err_tk = False
+err_syntax = False ; err_browser = False
 
 try: import json
 except ImportError:
@@ -45,17 +42,24 @@ except ImportError:
 	err_browser = True
 	print ('(!) webbrowser import error')
 
-try: import ftypes
-except ImportError:
-	err_ftypes = True
-	print ('(!) filetypes array import error')
-
 try: import syntax as s
 except ImportError:
 	err_syntax = True
 	print ('(!) syntax lib import error')
 
 onstart = True
+
+ftypes = [
+	('all', '*'),
+	('python', '*.py*'),
+	('javascript', '*.js'),
+	('c lang', '*.c'),
+	('c++ lang', '*.cpp'),
+	('css', '*.css'),
+	('html', '*.html'),
+	('json', '*.json'),
+	('markdown', '*.md')
+]
 
 extension = None
 path = None
@@ -148,7 +152,7 @@ def new (event):
 
 def openfile (event):
 
-	global path, edit, err_ftypes, extension, syntax, onstart
+	global path, edit, extension, syntax, onstart
 	onstart = False
 	verscroll.pack (
 		fill = 'y',
@@ -168,13 +172,7 @@ def openfile (event):
 		fill = 'both',
 		expand = True
 		)
-	if err_ftypes == False:
-		path = fd.Open (w, filetypes = ftypes.array).show ()
-	else:
-		try:
-			path = fd.Open (w, filetypes = [('all filetypes', '*')]).show ()
-		except TypeError:
-			path = None
+	path = fd.Open (w, filetypes = ftypes).show ()
 	if path == '':
 		return
 	textbox.delete ('1.0', 'end')
@@ -201,7 +199,7 @@ def openfile (event):
 
 def save(event):
 	
-	global path, edit, err_ftypes
+	global path, edit
 	if path != None:
 		try:
 			open(path, 'wt').write (textbox.get ('1.0', 'end'))
@@ -210,10 +208,7 @@ def save(event):
 	elif path == 'editor/config.json':
 		open ('editor/config.json', 'wt').write (textbox.get('1.0', 'end'))
 	else:
-		if err_ftypes == False:
-			path = fd.SaveAs(w, filetypes = ftypes.array).show ()
-		else:
-			path = fd.SaveAs(w, filetypes = [('all filetypes', '*')]).show ()
+		path = fd.SaveAs(w, filetypes = ftypes).show ()
 		if path == '':
 			return
 		try:
@@ -232,11 +227,8 @@ def save(event):
 			)
 		print ('(!) unknown title error')
 def saveas(event):
-	global path, edit, err_ftypes
-	if err_ftypes == False:
-		path = fd.SaveAs (w, filetypes = ftypes.array).show ()
-	else:
-		path = fd.SaveAs (w, filetypes = [('all filetypes', '*')]).show ()
+	global path, edit
+	path = fd.SaveAs (w, filetypes = ftypes).show ()
 	if path == '':
 		return
 	try:
@@ -617,20 +609,20 @@ def about_menu ():
 		)
 	about_other = tk.Label (
 		about_w,
-		text = 'copyright (c) 2020 - 2021 loadycode\n version '+notty_version+' build '+notty_build
+		text = 'copyright (c) 2020 - 2021 loadystudio\n version '+notty_version+' build '+notty_build
 		).pack ()
 
 def github_menu ():
 
 	if err_browser != True:
-		webbrowser.open('https://github.com/loadycode', new=2)
+		webbrowser.open('https://github.com/loadystudio', new=2)
 	else:
 		return
 
-def loadycode_menu ():
+def loadystudio_menu ():
 
 	if err_browser != True:
-		webbrowser.open('https://loadycode.online', new=2)
+		webbrowser.open('https://loadystudio.online', new=2)
 	else:
 		return
 
@@ -724,7 +716,7 @@ menu_pref_themes.add_radiobutton (label = 'dark', command = t_switch_dark)
 menu_pref_themes.add_radiobutton (label = 'light', command = t_switch_light)
 
 menu_help.add_command (label = 'github', command = github_menu)
-menu_help.add_command (label = 'loadycode', command = loadycode_menu)
+menu_help.add_command (label = 'loadystudio', command = loadystudio_menu)
 menu_help.add_separator ()
 menu_help.add_command (label = 'changelog', command = changelog_menu)
 menu_help.add_command (label = 'about', command = about_menu)
