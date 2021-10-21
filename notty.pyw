@@ -257,7 +257,7 @@ def config_open (event):
 		basename = os.path.basename (path)
 		extension = os.path.splitext (basename) [1]
 		syntax = 'json'
-		err_syntax != True and s.tokens_get (txt, s.JsonLexer ())
+		err_syntax != True and s.tokens_get (txt, s.jsonl ())
 		p_syntax ['text'] = 'config'
 		onstart = False
 		try:
@@ -547,11 +547,44 @@ def changelog_menu ():
 		basename = os.path.basename (path)
 		extension = os.path.splitext (basename) [1]
 		syntax = 'md'
-		err_syntax != True and s.tokens_get (txt, s.MarkdownLexer ())
+		err_syntax != True and s.tokens_get (txt, s.mdl ())
 		p_syntax ['text'] = 'changelog'
 		try:
 			w.title (
 				'changelog ' + title_separator + ' ' + title
+				)
+		except TypeError:
+			w.title (
+				title_error + ' '  + title_separator + ' ' + title
+				)
+		print ('(!) unknown title error')
+	except FileNotFoundError:
+		path = None
+		txt.delete ('1.0', 'end')
+		print ('(!) changelog not found')
+
+def readme_menu ():
+
+	try:
+		verscroll.pack (fill = 'y', side = 'right')
+		horscroll.pack (fill = 'x', side = 'bottom')
+		left_p.pack (fill = 'y', side = 'left')
+		txt.pack (side = 'left', fill = 'both', expand = True)
+		global path, edit, syntax, onstart
+		onstart = False
+		path = 'README.md'
+		if path == '': return
+		txt.delete ('1.0', 'end')
+		txt.insert ('1.0', open (path).read ().rstrip ('\n'))
+		edit = False
+		basename = os.path.basename (path)
+		extension = os.path.splitext (basename) [1]
+		syntax = 'md'
+		err_syntax != True and s.tokens_get (txt, s.mdl ())
+		p_syntax ['text'] = 'readme'
+		try:
+			w.title (
+				'readme ' + title_separator + ' ' + title
 				)
 		except TypeError:
 			w.title (
@@ -605,6 +638,7 @@ menu_pref_themes.add_radiobutton (label = 'light', command = t_switch_light)
 menu_other.add_command (label = 'github', command = github_menu)
 menu_other.add_command (label = 'loadystudio', command = loadystudio_menu)
 menu_other.add_separator ()
+menu_other.add_command (label = 'readme', command = readme_menu)
 menu_other.add_command (label = 'changelog', command = changelog_menu)
 menu_other.add_command (label = 'about', command = about_menu)
 
