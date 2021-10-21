@@ -15,3 +15,8 @@ after that, you need to install pygments if you want launch notty successfuly:
 ```
 pip install pygments
 ```
+
+for other info visit notty wiki on github: https://github.com/loadystudio/notty/wiki
+for releases: https://github.com/loadystudio/notty/releases
+
+home of the notty and loady: http://loadystudio.cf

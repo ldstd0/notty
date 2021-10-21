@@ -92,7 +92,7 @@ def edit_event(err_syntax, syntax, textbox, switched):
 def switch(extension,syntax,textbox,p_syntax,switched):
 	if syntax != 'text':
 		syntax = 'text'
-		p_syntax['text']='text'
+		p_syntax['text']=syntax
 		delete_tokens(textbox)
 		switched=True
 	elif switched==True:
