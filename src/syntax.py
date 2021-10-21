@@ -12,202 +12,109 @@
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
+# specificuage governing permissions and limitations
 # under the License.
-
-pygmentImportError = False
-
+err_pygment = False
 import tkinter as tk
-
 try:
-	from pygments.lexers import JsonLexer
-	from pygments.lexers import CLexer
-	from pygments.lexers import HtmlLexer
-	from pygments.lexers import CssLexer
-	from pygments.lexers import CppLexer
-	from pygments.lexers import PythonLexer
-	from pygments.lexers import JavascriptLexer
-	from pygments.lexers import MarkdownLexer
-	from pygments.token import Token
-except ImportError:
-	pygmentImportError = True
-	print ('(!) pygments import error')
-
-array = [
-	'json',
-	'c lang',
-	'c++ lang',
-	'html',
-	'css',
-	'python',
-	'javascript',
-	'markdown'
-]
-
+	from pygments.lexers import JsonLexer as jsonl
+	from pygments.lexers import CLexer as cl
+	from pygments.lexers import HtmlLexer as htmll
+	from pygments.lexers import CssLexer as cssl
+	from pygments.lexers import CppLexer as cppl
+	from pygments.lexers import PythonLexer as pyl
+	from pygments.lexers import JavascriptLexer as jsl
+	from pygments.lexers import MarkdownLexer as mdl
+	from pygments.token import Token as tkn
+except ImportError: err_pygment = True ; print ('(!) pygments import error')
+array=['json','c','cpp','html','css','py','js','md']
 color_keyword = '#ff00cc'
 color_string_literal = '#00cc66'
 color_comment = '#999999'
 color_name_builtin = '#3399cc'
 color_keyword_ext = '#ff0000'
-
 token_type_to_tag = {
-		Token.Keyword: 'keyword',
-		Token.Keyword.Type: 'keyword_ext',
-		Token.Keyword.Reserved: 'keyword_ext',
-		Token.Keyword.Constant:'keyword_ext',
-		Token.Operator.Word: 'keyword',
-		Token.Name.Builtin: 'name_builtin',
-		Token.Literal.String.Single: 'string_literal',
-		Token.Literal.String.Double: 'string_literal',
-		Token.Comment.Single: 'comment',
-		Token.Comment.Hashbang: 'comment',
-		Token.Comment.Multiline: 'comment'
+		tkn.Keyword: 'keyword',
+		tkn.Keyword.Type: 'keyword_ext',
+		tkn.Keyword.Reserved: 'keyword_ext',
+		tkn.Keyword.Constant:'keyword_ext',
+		tkn.Operator.Word: 'keyword',
+		tkn.Name.Builtin: 'name_builtin',
+		tkn.Literal.String.Single: 'string_literal',
+		tkn.Literal.String.Double: 'string_literal',
+		tkn.Comment.Single: 'comment',
+		tkn.Comment.Hashbang: 'comment',
+		tkn.Comment.Multiline: 'comment'
 }
-
 def tokens_init (textbox):
-
 	textbox.tag_config ('keyword', foreground = color_keyword)
 	textbox.tag_config ('keyword_ext', foreground = color_keyword_ext)
 	textbox.tag_config ('name_builtin', foreground = color_name_builtin)
 	textbox.tag_config ('string_literal', foreground = color_string_literal)
 	textbox.tag_config ('comment', foreground = color_comment)
-
 def tokens_get(textbox,lexer):
-
 	def get_text_coord (s: str, i: int):
 		for row_number, line in enumerate (s.splitlines (keepends=True), 1):
-			if i < len (line):
-				return f'{row_number}.{i}'
+			if i < len (line): return f'{row_number}.{i}'
 			i -= len (line)
-	for tag in textbox.tag_names ():
-		textbox.tag_remove (tag, 1.0, 'end')
+	for tag in textbox.tag_names (): textbox.tag_remove (tag, 1.0, 'end')
 	s = textbox.get (1.0, 'end')
 	tokens = lexer.get_tokens_unprocessed (s)
 	for i, token_type, token in tokens:
 		j = i + len (token)
-		if token_type in token_type_to_tag:
-			textbox.tag_add(
-				token_type_to_tag [token_type],
-				get_text_coord(s, i),
-				get_text_coord(s, j)
-				)
+		token_type in token_type_to_tag and textbox.tag_add(token_type_to_tag [token_type],get_text_coord(s, i),get_text_coord(s, j))
 	textbox.edit_modified (0)
-
 def delete_tokens(textbox):
-
-	for tag in textbox.tag_names ():
-		textbox.tag_remove (tag, 1.0, 'end')
-
-def open(extension,
-	err_syntax, syntax,
-	textbox, p_syntax):
-	if extension == '.py' or extension == '.pyw':
-		syntax='py'
-		if err_syntax!=True:tokens_get(textbox,PythonLexer())
-		p_syntax['text']='python'
-	elif extension=='.js':
-		syntax='js'
-		tokens_get(textbox,JavascriptLexer())
-		p_syntax['text']='javascript'
-	elif extension=='.c':
-		syntax='c'
-		tokens_get(textbox,CLexer())
-		p_syntax['text']='c lang'
-	elif extension=='.cpp':
-		syntax='cpp'
-		tokens_get(textbox,CppLexer())
-		p_syntax['text']='c++ lang'
-	elif extension=='.html':
-		syntax='html'
-		tokens_get(textbox,HtmlLexer())
-		p_syntax['text']='html'
-	elif extension=='.css':
-		syntax='css'
-		tokens_get(textbox,CssLexer())
-		p_syntax['text']='css'
-	elif extension=='.json':
-		syntax='json'
-		tokens_get(textbox,JsonLexer())
-		p_syntax['text']='json'
-	elif extension == 'md':
-		syntax = 'md'
-		tokens_get (textbox, MarkdownLexer ())
-		p_syntax ['text'] = 'markdown'
-def edit_event(err_syntax,syntax,textbox,switched):
+	for tag in textbox.tag_names (): textbox.tag_remove (tag, 1.0, 'end')
+def open(extension, err_syntax, syntax, textbox, p_syntax):
+	syntax = extension[1:] ; p_syntax ['text'] = extension[1:]
+	if extension == '.py' or '.pyw':
+		syntax='py'; p_syntax='py'
+		err_syntax == False and tokens_get (textbox, pyl())
+	elif extension == '.js': err_syntax == False and tokens_get (textbox, jsl())
+	elif extension == '.c': err_syntax == False and tokens_get (textbox, cl())
+	elif extension == '.cpp': err_syntax == False and tokens_get (textbox, cppl())
+	elif extension == '.html': err_syntax == False and tokens_get (textbox, htmll())
+	elif extension == '.css': err_syntax == False and tokens_get (textbox, cssl())
+	elif extension == '.json': err_syntax == False and tokens_get (textbox, jsonl())
+	elif extension == '.md': err_syntax == False and tokens_get (textbox, mdl())
+	else: syntax = 'text' ; p_syntax ['text'] = 'plain text'
+def edit_event(err_syntax, syntax, textbox, switched):
 	if err_syntax!=True and switched==False:
-			if syntax=='py':
-				tokens_get(textbox,PythonLexer())
-			elif syntax=='js':
-				tokens_get(textbox,JavascriptLexer())
-			elif syntax=='c':
-				tokens_get(textbox,CLexer())
-			elif syntax=='cpp':
-				tokens_get(textbox,CppLexer())
-			elif syntax=='html':
-				tokens_get(textbox,HtmlLexer())
-			elif syntax=='css':
-				tokens_get(textbox,CssLexer())
-			elif syntax=='json':
-				tokens_get(textbox,JsonLexer())
-			elif syntax == 'md':
-				tokens_get (textbox, MarkdownLexer ())
+		if syntax=='py' or syntax=='pyw': tokens_get(textbox,pyl())
+		elif syntax=='js': tokens_get(textbox,jsl())
+		elif syntax=='c': tokens_get(textbox,cl())
+		elif syntax=='cpp': tokens_get(textbox,cppl())
+		elif syntax=='html': tokens_get(textbox,htmll())
+		elif syntax=='css': tokens_get(textbox,cssl())
+		elif syntax=='json': tokens_get(textbox,jsonl())
+		elif syntax=='md': tokens_get(textbox, mdl())
 def switch(extension,syntax,textbox,p_syntax,switched):
-	if syntax!='text':
-		syntax='text'
-		p_syntax['text']='plain text'
+	if syntax != 'text':
+		syntax = 'text'
+		p_syntax['text']='text'
 		delete_tokens(textbox)
 		switched=True
 	elif switched==True:
-		if extension=='.py':
-			syntax='py'
-			p_syntax['text']='python'
-			tokens_get(textbox,PythonLexer())
-			switched=False
-		elif extension=='.c':
-			syntax='c'
-			p_syntax['text']='c lang'
-			tokens_get(textbox,CLexer())
-			switched=False
-		elif extension == '.cpp':
-			syntax = 'cpp'
-			p_syntax ['text'] = 'c++ lang'
-			tokens_get (textbox, CppLexer ())
-			switched = False
-		elif extension == '.json':
-			syntax = 'json'
-			p_syntax ['text'] = 'json'
-			tokens_get (textbox, JsonLexer ())
-			switched = False
-		elif extension == '.html':
-			syntax = 'html'
-			p_syntax ['text'] = 'html'
-			tokens_get (textbox, HtmlLexer ())
-			switched = False
-		elif extension == '.css':
-			syntax = 'css'
-			p_syntax ['text'] = 'css'
-			tokens_get (textbox, CssLexer ())
-			switched = False
-		elif extension == '.js':
-			syntax = 'js'
-			p_syntax ['text'] = 'javascript'
-			tokens_get (textbox, JavascriptLexer ())
-			switched = False
-		elif extension == '.md':
-			syntax = 'md'
-			p_syntax ['text'] = 'markdown'
-			tokens_get(textbox, MarkdownLexer ())
-
+		syntax = extension[1:] ; p_syntax ['text'] = extension[1:] ; switched = False
+		if extension == '.py' or '.pyw':
+			syntax='py'; p_syntax='py'
+			err_syntax == False and tokens_get (textbox, pyl())
+		elif extension == '.js': err_syntax == False and tokens_get (textbox, jsl())
+		elif extension == '.c': err_syntax == False and tokens_get (textbox, cl())
+		elif extension == '.cpp': err_syntax == False and tokens_get (textbox, cppl())
+		elif extension == '.html': err_syntax == False and tokens_get (textbox, htmll())
+		elif extension == '.css': err_syntax == False and tokens_get (textbox, cssl())
+		elif extension == '.json': err_syntax == False and tokens_get (textbox, jsonl())
+		elif extension == '.md': err_syntax == False and tokens_get (textbox, mdl())
 def sset (name, syntax, p_syntax, textbox):
-
 	p_syntax ['text'] = name
-
 	if name == 'plain text': delete_tokens(textbox)
-	elif name == 'python': tokens_get (textbox, PythonLexer ())
-	elif name == 'c lang': tokens_get (textbox, CLexer ())
-	elif name == 'c++ lang': tokens_get (textbox, CppLexer ())
-	elif name == 'json': tokens_get (textbox, JsonLexer ())
-	elif name == 'html': tokens_get (textbox, HtmlLexer ())
-	elif name == 'css': tokens_get (textbox, CssLexer ())
-	elif name == 'javascript': tokens_get (textbox, JavascriptLexer ())
-	elif name == 'markdown': tokens_get(textbox, MarkdownLexer ())
+	elif name == 'py': tokens_get (textbox, pyl ())
+	elif name == 'c': tokens_get (textbox, cl ())
+	elif name == 'cpp': tokens_get (textbox, cppl ())
+	elif name == 'json': tokens_get (textbox, jsonl ())
+	elif name == 'html': tokens_get (textbox, htmll ())
+	elif name == 'css': tokens_get (textbox, cssl ())
+	elif name == 'js': tokens_get (textbox, jsl ())
+	elif name == 'md': tokens_get(textbox, mdl ())

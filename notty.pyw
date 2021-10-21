@@ -37,10 +37,10 @@ except ImportError:
 	err_tk = True
 	print ('(!) tkinter import error')
 
-try: import webbrowser
+try: import webbrowser as wb
 except ImportError:
 	err_browser = True
-	print ('(!) webbrowser import error')
+	print ('(!) web browser import error')
 
 try: import syntax as s
 except ImportError:
@@ -79,11 +79,11 @@ show_left_p = 'true'
 
 def edit_event (event):
 
-	global p_pos, textbox
+	global p_pos, txt
 
-	p_pos ['text'] = textbox.index(tk.INSERT)
+	p_pos ['text'] = txt.index(tk.INSERT)
 
-	count = len(textbox.get ('1.0', 'end').splitlines ())
+	count = len(txt.get ('1.0', 'end').splitlines ())
 	lines = 1
 	lines_p = ''
 	while lines <= count:
@@ -97,17 +97,13 @@ def edit_event (event):
 	left_p.insert ('1.0', lines_p)
 	left_p ['state'] = 'disabled'
 
-	s.edit_event (err_syntax,syntax,textbox,switched)
+	s.edit_event (err_syntax, syntax, txt, switched)
 	edit = True
 	try:
-		if path != None:
-			w.title (
-				title_edited +' ' + os.path.basename (path) + ' ' + title_separator + ' ' + title
-				)
-		else:
-			w.title (
-				title_edited + ' untitled ' + title_separator + ' ' + title
-				)
+		w.title (
+			title_edited + ' ' + os.path.basename(path) + ' ' + title_separator + ' ' + title if path != None 
+			else title_edited + ' untitled ' + title_separator + ' ' + title
+			)
 	except TypeError:
 		w.title (
 			title_error + ' '  + title_separator + ' ' + title
@@ -123,7 +119,7 @@ def new (event):
 	global path, onstart
 	onstart = False
 	p_syntax ['text'] = 'plain text'
-	textbox.delete ('1.0', 'end')
+	txt.delete ('1.0', 'end')
 	w.title (
 		'untitled ' + title_separator + ' ' + title
 		)
@@ -136,18 +132,14 @@ def new (event):
 		fill = 'x',
 		side = 'bottom'
 		)
-	if show_left_p != 'false':
-		left_p.pack (
-			fill = 'y',
-			side = 'left'
-			)
-	textbox.pack (
+	show_left_p != 'false' and left_p.pack (fill = 'y', side = 'left')
+	txt.pack (
 		side = 'left',
 		fill = 'both',
 		expand = True
 		)
 	s.switch (extension,
-		syntax, textbox,
+		syntax, txt,
 		p_syntax, switched)
 
 def openfile (event):
@@ -162,22 +154,17 @@ def openfile (event):
 		fill = 'x',
 		side = 'bottom'
 		)
-	if show_left_p != 'false':
-		left_p.pack (
-			fill = 'y',
-			side = 'left'
-			)
-	textbox.pack (
+	show_left_p != 'false' and left_p.pack (fill = 'y', side = 'left')
+	txt.pack (
 		side = 'left',
 		fill = 'both',
 		expand = True
 		)
 	path = fd.Open (w, filetypes = ftypes).show ()
-	if path == '':
-		return
-	textbox.delete ('1.0', 'end')
+	if path == '': return
+	txt.delete ('1.0', 'end')
 	try:
-		textbox.insert ('1.0', open (path).read ().rstrip ('\n'))
+		txt.insert ('1.0', open (path).read ().rstrip ('\n'))
 	except TypeError:
 		path=None
 		return
@@ -186,7 +173,7 @@ def openfile (event):
 	extension = os.path.splitext (basename) [1]
 	s.open (extension,
 		err_syntax, syntax,
-		textbox, p_syntax)
+		txt, p_syntax)
 	try:
 		w.title (
 			os.path.basename (path) + ' ' + title_separator + ' ' + title
@@ -202,17 +189,16 @@ def save(event):
 	global path, edit
 	if path != None:
 		try:
-			open(path, 'wt').write (textbox.get ('1.0', 'end'))
+			open(path, 'wt').write (txt.get ('1.0', 'end'))
 		except FileNotFoundError:
 			path=None
 	elif path == 'editor/config.json':
-		open ('editor/config.json', 'wt').write (textbox.get('1.0', 'end'))
+		open ('editor/config.json', 'wt').write (txt.get('1.0', 'end'))
 	else:
 		path = fd.SaveAs(w, filetypes = ftypes).show ()
-		if path == '':
-			return
+		if path == '': return
 		try:
-			open (path, 'wt').write (textbox.get ('1.0', 'end'))
+			open (path, 'wt').write (txt.get ('1.0', 'end'))
 		except TypeError:
 			path = None
 			return
@@ -229,10 +215,9 @@ def save(event):
 def saveas(event):
 	global path, edit
 	path = fd.SaveAs (w, filetypes = ftypes).show ()
-	if path == '':
-		return
+	if path == '': return
 	try:
-		open (path, 'wt').write (textbox.get ('1.0', 'end'))
+		open (path, 'wt').write (txt.get ('1.0', 'end'))
 	except TypeError:
 		path = None
 	edit = False
@@ -257,28 +242,22 @@ def config_open (event):
 			fill = 'x',
 			side = 'bottom'
 			)
-		if show_left_p != 'false':
-			left_p.pack (
-				fill = 'y',
-				side = 'left'
-				)
-		textbox.pack (
+		show_left_p != 'false' and left_p.pack (fill = 'y', side = 'left')
+		txt.pack (
 			side = 'left',
 			fill = 'both',
 			expand = True
 			)
 		global path, edit, syntax, onstart
 		path = 'editor/config.json'
-		if path == '':
-			return
-		textbox.delete ('1.0', 'end')
-		textbox.insert ('1.0', open (path).read ().rstrip ('\n'))
+		if path == '': return
+		txt.delete ('1.0', 'end')
+		txt.insert ('1.0', open (path).read ().rstrip ('\n'))
 		edit = False
 		basename = os.path.basename (path)
 		extension = os.path.splitext (basename) [1]
 		syntax = 'json'
-		if err_syntax != True:
-			s.tokens_get (textbox, s.JsonLexer ())
+		err_syntax != True and s.tokens_get (txt, s.JsonLexer ())
 		p_syntax ['text'] = 'config'
 		onstart = False
 		try:
@@ -292,7 +271,7 @@ def config_open (event):
 		print ('(!) unknown title error')
 	except FileNotFoundError:
 		path = None
-		textbox.delete ('1.0', 'end')
+		txt.delete ('1.0', 'end')
 		print ('(!) config not found')
 
 t_bg = '#222222'
@@ -305,7 +284,7 @@ def config_check ():
 	global t_bg, t_fg, t_font, t_caret, t_p_bg, t_p_fg, t_p_font, p_syntax, p
 	global title, title_separator, title_edited, show_menu, show_p, show_left_p
 	if err_json != True:
-		with open('editor/config.json', 'r', encoding = 'utf-8') as config_output:
+		with open('editor/config.json','r',encoding='utf-8') as config_output:
 			config_output_result = json.load (config_output)
 		for config_output_variables in config_output_result ['notty']:
 			title = config_output_variables ['title']
@@ -327,10 +306,10 @@ def config_check ():
 			t_p_fg = output_variables_p ['fg']
 			t_p_font = output_variables_p ['font']
 		w ['bg'] = t_bg
-		textbox ['bg'] = t_bg
-		textbox ['fg'] = t_fg
-		textbox ['font'] = t_font
-		textbox ['insertbackground'] = t_caret
+		txt ['bg'] = t_bg
+		txt ['fg'] = t_fg
+		txt ['font'] = t_font
+		txt ['insertbackground'] = t_caret
 		p ['bg'] = t_p_bg
 		p_syntax ['bg'] = t_p_bg
 		p_syntax ['fg'] = t_p_fg
@@ -338,20 +317,17 @@ def config_check ():
 
 def syntax_switch_event (event): 
 	
-	s.switch (extension,
-		syntax,textbox,
-		p_syntax,
-		switched)
+	s.switch (extension, syntax, txt, p_syntax, switched)
 
 def manifest_check ():
 
 	global notty_version, notty_build
 	if err_json != True:
-		with open('editor/manifest.json', 'r', encoding = 'utf-8') as manifest_output:
-			manifest_output_result = json.load (manifest_output)
-		for manifest_output_variables in manifest_output_result ['notty']:
-			notty_version = manifest_output_variables ['version']
-			notty_build = manifest_output_variables ['build']
+		with open('editor/manifest.json','r',encoding='utf-8') as manifest_out:
+			manifest_out_res = json.load (manifest_out)
+		for manifest_out_vars in manifest_out_res ['notty']:
+			notty_version = manifest_out_vars ['version']
+			notty_build = manifest_out_vars ['build']
 
 t_src = 'themes/'
 
@@ -360,22 +336,22 @@ def t_switch (name):
 	global t_bg, t_fg, t_font, t_caret, t_p_bg, t_p_fg, t_p_font, p_syntax, p
 	if err_json != True:
 		t_path = 'themes/' + name + '.json'
-		with open(t_path, 'r', encoding = 'utf-8') as output:
-			output_result = json.load (output)
-		for output_variables in output_result ['textbox']:
-			t_bg = output_variables ['bg']
-			t_fg = output_variables ['fg']
-			t_font = output_variables ['font']
-			t_caret = output_variables ['caret']
-		for output_variables_p in output_result ['panel']:
-			t_p_bg = output_variables_p ['bg']
-			t_p_fg = output_variables_p ['fg']
-			t_p_font = output_variables_p ['font']
+		with open(t_path, 'r', encoding = 'utf-8') as out:
+			out_res = json.load (out)
+		for out_vars in out_res ['txt']:
+			t_bg = out_vars ['bg']
+			t_fg = out_vars ['fg']
+			t_font = out_vars ['font']
+			t_caret = out_vars ['caret']
+		for out_vars_p in out_res ['panel']:
+			t_p_bg = out_vars_p ['bg']
+			t_p_fg = out_vars_p ['fg']
+			t_p_font = out_vars_p ['font']
 		w ['bg'] = t_bg
-		textbox ['bg'] = t_bg
-		textbox ['fg'] = t_fg
-		textbox ['font'] = t_font
-		textbox ['insertbackground'] = t_caret
+		txt ['bg'] = t_bg
+		txt ['fg'] = t_fg
+		txt ['font'] = t_font
+		txt ['insertbackground'] = t_caret
 		p ['bg'] = t_p_bg
 		p_syntax ['bg'] = t_p_bg
 		p_syntax ['fg'] = t_p_fg
@@ -405,7 +381,7 @@ class modifiedmixin:
 		try: self.tk.call (self._w, 'edit', 'modified', 0)
 		finally: self._resetting_modified_flag = False
 
-class textbox_class (modifiedmixin, tk.Text):
+class txt_class (modifiedmixin, tk.Text):
 
 		def __init__ (self, *a, **b):
 			tk.Text.__init__ (self, *a, **b)
@@ -413,17 +389,17 @@ class textbox_class (modifiedmixin, tk.Text):
 		def beenmodified (self, event=None):
 			edit_event (0)
 
-textbox = textbox_class()
-textbox ['relief'] = 'flat'
-textbox ['highlightthickness'] = 0
-textbox ['undo'] = True
-textbox ['wrap'] = 'none'
-textbox ['bg'] = t_bg
-textbox ['fg'] = t_fg
-textbox ['font'] = t_font
-textbox ['insertbackground'] = t_caret
+txt = txt_class()
+txt ['relief'] = 'flat'
+txt ['highlightthickness'] = 0
+txt ['undo'] = True
+txt ['wrap'] = 'none'
+txt ['bg'] = t_bg
+txt ['fg'] = t_fg
+txt ['font'] = t_font
+txt ['insertbackground'] = t_caret
 
-if err_syntax != True: s.tokens_init(textbox)
+if err_syntax != True: s.tokens_init(txt)
 
 p = tk.Frame (w,
 	bg = 'whitesmoke',
@@ -442,7 +418,7 @@ def p_hide ():
 		verscroll.pack_forget ()
 		horscroll.pack_forget ()
 		left_p.pack_forget ()
-		textbox.pack_forget ()
+		txt.pack_forget ()
 		p.pack(
 			side = 'bottom',
 			fill = 'x'
@@ -456,13 +432,8 @@ def p_hide ():
 				fill = 'x',
 				side = 'bottom'
 				)
-			if left_p_hided == False:
-				if show_left_p != 'false':
-					left_p.pack (
-						fill = 'y',
-						side = 'left'
-						)
-			textbox.pack (
+			show_left_p != 'false' and left_p.pack (fill = 'y', side = 'left')
+			txt.pack (
 				side = 'left',
 				fill = 'both',
 				expand = True
@@ -477,17 +448,8 @@ def left_p_hide ():
 		left_p.pack_forget ()
 		left_p_hided = True
 	else:
-		textbox.pack_forget ()
-		if onstart == False:
-			left_p.pack (
-				fill = 'y',
-				side = 'left'
-				)
-			textbox.pack (
-				side = 'left',
-				fill = 'both',
-				expand = True
-				)
+		txt.pack_forget ()
+		onstart == False and left_p.pack (fill = 'y', side = 'left'), txt.pack (side = 'left', fill = 'both', expand = True)
 		left_p_hided = False
 
 p_pos = tk.Label (p,
@@ -515,20 +477,16 @@ left_p = tk.Text (w,
 	width = 6
 	)
 
-def multiple_yview(*args):
-    textbox.yview(*args)
-    left_p.yview(*args)
-
 verscroll = tk.Scrollbar (w,
 	background = 'whitesmoke',
 	relief = 'flat',
 	width = 15,
-	command = multiple_yview
-	)
+	command = lambda *args: (txt.yview(*args), left_p.yview(*args))
+)
 horscroll = tk.Scrollbar (w,
 	background = 'whitesmoke',
 	relief = 'flat',
-	command = textbox.xview,
+	command = txt.xview,
 	orient = 'horizontal'
 	)
 
@@ -539,59 +497,15 @@ def saveas_menu (): saveas (0)
 def exit_menu (): exit (0)
 def config_menu(): config_open (0)
 
-def set_text ():
-	
-	global syntax 
-	s.sset ('plain text', syntax, p_syntax, textbox)
-	syntax = 'text'
-
-def set_py ():
-	
-	global syntax 
-	s.sset ('python', syntax, p_syntax, textbox)
-	syntax = 'py'
-
-def set_c ():
-	
-	global syntax
-	s.sset ('c lang', syntax, p_syntax, textbox)
-	syntax = 'c'
-
-def set_cpp ():
-	
-	global syntax
-	s.sset ('c++ lang', syntax, p_syntax, textbox)
-	syntax = 'cpp'
-
-def set_json ():
-	
-	global syntax
-	s.sset ('json', syntax, p_syntax, textbox)
-	syntax = 'json'
-
-def set_html ():
-	
-	global syntax
-	s.sset ('html', syntax, p_syntax, textbox)
-	syntax = 'html'
-
-def set_css ():
-	
-	global syntax
-	s.sset ('css', syntax, p_syntax, textbox)
-	syntax = 'css'
-
-def set_js ():
-	
-	global syntax
-	s.sset ('javascript', syntax, p_syntax, textbox)
-	syntax = 'js'
-
-def set_md ():
-	
-	global syntax
-	s.sset ('markdown', syntax, p_syntax, textbox)
-	syntax = 'md'
+def set_text (): global syntax ; s.sset ('text', syntax, p_syntax, txt) ; syntax = 'text'
+def set_py (): global syntax ; s.sset ('py', syntax, p_syntax, txt) ; syntax = 'py'
+def set_c (): global syntax ; s.sset ('c', syntax, p_syntax, txt) ; syntax = 'c'
+def set_cpp (): global syntax ; s.sset ('cpp', syntax, p_syntax, txt) ; syntax = 'cpp'
+def set_json (): global syntax ; s.sset ('json', syntax, p_syntax, txt) ; syntax = 'json'
+def set_html (): global syntax ; s.sset ('html', syntax, p_syntax, txt) ; syntax = 'html'
+def set_css (): global syntax ; s.sset ('css', syntax, p_syntax, txt) ; syntax = 'css'
+def set_js (): global syntax ; s.sset ('js', syntax, p_syntax, txt) ; syntax = 'js'
+def set_md (): global syntax ; s.sset ('md', syntax, p_syntax, txt) ; syntax = 'md'
 
 def about_menu ():
 
@@ -612,53 +526,28 @@ def about_menu ():
 		text = 'copyright (c) 2020 - 2021 loadystudio\n version '+notty_version+' build '+notty_build
 		).pack ()
 
-def github_menu ():
+def github_menu (): err_browser == False and wb.open ('https://github.com/loadystudio', new=2)
 
-	if err_browser != True:
-		webbrowser.open('https://github.com/loadystudio', new=2)
-	else:
-		return
-
-def loadystudio_menu ():
-
-	if err_browser != True:
-		webbrowser.open('https://loadystudio.online', new=2)
-	else:
-		return
+def loadystudio_menu (): err_browser == False and wb.open ('https://loadystudio.cf', new=2)
 
 def changelog_menu ():
 
 	try:
-		verscroll.pack (
-			fill = 'y',
-			side = 'right'
-			)
-		horscroll.pack (
-			fill = 'x',
-			side = 'bottom'
-			)
-		left_p.pack (
-			fill = 'y',
-			side = 'left'
-			)
-		textbox.pack (
-			side = 'left',
-			fill = 'both',
-			expand = True
-			)
+		verscroll.pack (fill = 'y', side = 'right')
+		horscroll.pack (fill = 'x', side = 'bottom')
+		left_p.pack (fill = 'y', side = 'left')
+		txt.pack (side = 'left', fill = 'both', expand = True)
 		global path, edit, syntax, onstart
 		onstart = False
 		path = 'CHANGELOG.md'
-		if path == '':
-			return
-		textbox.delete ('1.0', 'end')
-		textbox.insert ('1.0', open (path).read ().rstrip ('\n'))
+		if path == '': return
+		txt.delete ('1.0', 'end')
+		txt.insert ('1.0', open (path).read ().rstrip ('\n'))
 		edit = False
 		basename = os.path.basename (path)
 		extension = os.path.splitext (basename) [1]
 		syntax = 'md'
-		if err_syntax != True:
-			s.tokens_get (textbox, s.MarkdownLexer ())
+		err_syntax != True and s.tokens_get (txt, s.MarkdownLexer ())
 		p_syntax ['text'] = 'changelog'
 		try:
 			w.title (
@@ -671,13 +560,11 @@ def changelog_menu ():
 		print ('(!) unknown title error')
 	except FileNotFoundError:
 		path = None
-		textbox.delete ('1.0', 'end')
+		txt.delete ('1.0', 'end')
 		print ('(!) changelog not found')
 
-def t_switch_dark ():
-	t_switch ('dark')
-def t_switch_light ():
-	t_switch ('light')
+def t_switch_dark (): t_switch ('dark')
+def t_switch_light (): t_switch ('light')
 
 menu = tk.Menu (w, relief = 'flat', bg = 'whitesmoke')
 menu_file = tk.Menu (menu, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
@@ -685,7 +572,7 @@ menu_pref = tk.Menu (menu, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
 menu_pref_themes = tk.Menu(menu_pref, tearoff=0, relief = 'flat', bg = 'whitesmoke')
 menu_view = tk.Menu (menu, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
 menu_view_syntax = tk.Menu (menu_view, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
-menu_help = tk.Menu (menu, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
+menu_other = tk.Menu (menu, tearoff = 0, relief = 'flat', bg = 'whitesmoke')
 
 menu_view.add_command (label = 'show/hide panel', command = p_hide)
 menu_view.add_command (label = 'show/hide lines panel', command = left_p_hide)
@@ -715,42 +602,32 @@ menu_pref.add_separator ()
 menu_pref_themes.add_radiobutton (label = 'dark', command = t_switch_dark)
 menu_pref_themes.add_radiobutton (label = 'light', command = t_switch_light)
 
-menu_help.add_command (label = 'github', command = github_menu)
-menu_help.add_command (label = 'loadystudio', command = loadystudio_menu)
-menu_help.add_separator ()
-menu_help.add_command (label = 'changelog', command = changelog_menu)
-menu_help.add_command (label = 'about', command = about_menu)
+menu_other.add_command (label = 'github', command = github_menu)
+menu_other.add_command (label = 'loadystudio', command = loadystudio_menu)
+menu_other.add_separator ()
+menu_other.add_command (label = 'changelog', command = changelog_menu)
+menu_other.add_command (label = 'about', command = about_menu)
 
 menu.add_cascade (label = 'file', menu = menu_file)
 menu.add_cascade (label = 'view', menu = menu_view)
 menu.add_cascade (label = 'prefrences', menu = menu_pref)
-menu.add_cascade (label = 'help', menu = menu_help)
+menu.add_cascade (label = 'other', menu = menu_other)
 
 menu_view.add_cascade (label = 'syntax', menu = menu_view_syntax)
 
 menu_pref.add_cascade (label = 'themes', menu = menu_pref_themes)
 
-def text_cut ():
-
-	text_copy ()
-	text_delete ()
+def text_cut (): text_copy () ; text_delete ()
 
 def text_copy ():
+	selection = txt.tag_ranges (tk.SEL)
+	selection and txt.clipboard_clear (), txt.clipboard_append (txt.get (*selection))
 
-	selection = textbox.tag_ranges (tk.SEL)
-	if selection:
-		textbox.clipboard_clear ()
-		textbox.clipboard_append (textbox.get (*selection))
-
-def text_paste ():
-
-	textbox.insert (tk.INSERT, textbox.clipboard_get ())
+def text_paste (): txt.insert (tk.INSERT, txt.clipboard_get ())
 
 def text_delete ():
-
-	selection = textbox.tag_ranges (tk.SEL)
-	if selection:
-		textbox.delete (*selection)
+	selection = txt.tag_ranges (tk.SEL)
+	selection and txt.delete (*selection)
 
 popup = tk.Menu (w, tearoff = 0, bg='whitesmoke')
 popup.add_command (label = 'cut (ctrl+x)', command = text_cut)
@@ -758,33 +635,23 @@ popup.add_command (label = 'copy (ctrl+c)', command = text_copy)
 popup.add_command (label = 'paste (ctrl+v)', command = text_paste)
 popup.add_command (label = 'delete (del)', command = text_delete)
 
-def show_popup(event):
+def show_popup(event): popup.post(event.x_root, event.y_root)
 
-	popup.post(event.x_root, event.y_root)
-
-textbox.bind('<Button-3>', show_popup)
+txt.bind('<Button-3>', show_popup)
 
 def pack():
-	if show_menu != 'false':
-		w.config (menu = menu)
+	show_menu != 'false' and w.config (menu = menu)
 	p_pos.pack (side = 'left')
 	p_info.pack (side = 'left')
 	p_syntax.pack (side = 'right')
-	lol = 0
-	if show_p != 'false':
-		p.pack(
-			side = 'bottom',
-			fill = 'x'
-			)
-	textbox ['yscrollcommand'] = verscroll.set
+	show_p != 'false' and p.pack (side = 'bottom', fill = 'x')
+	txt ['yscrollcommand'] = verscroll.set
 	left_p ['yscrollcommand'] = verscroll.set
-	textbox ['xscrollcommand'] = horscroll.set
+	txt ['xscrollcommand'] = horscroll.set
 
 def glaunch():
 
-	config_check()
-	manifest_check()
-	pack ()
+	config_check() ; manifest_check() ; pack ()
 	w.title (title)
 	w.tk.call('wm', 'iconphoto', w._w, tk.PhotoImage (file = 'icon.png') )
 	w.geometry ('700x400+50+50')
