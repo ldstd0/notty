@@ -1,4 +1,10 @@
 {
+	"info": [
+		{ 
+		"name": "dark",
+		"author": "loadystudio"
+		}
+	],
 	"textbox": [
 		{
 		"bg": "#222222",

@@ -3,6 +3,7 @@
 "notty":
 [{
 	"theme": "dark",
+	"color-scheme": "standart",
 
 	"title": "notty",
 	"title-separator": "-",
