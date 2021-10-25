@@ -116,15 +116,19 @@ def tkns_get (lexer):
 			if i < len (line):
 				return f'{row_number}.{i}'
 			i -= len (line)
+	a = "%.1f" % float(txt.index (tk.INSERT))
+	vis_start = float (str(int(str(a)[:-2]) - 50) + '.0')
+	if vis_start < 0: vis_start = 1.0
+	vis_end = float (str(int(str(a)[:-2]) + 50) + '.0')
 	for tag in txt.tag_names ():
 		txt.tag_remove (
 			tag,
-			1.0,
-			'end'
+			vis_start,
+			vis_end
 			)
 	s = txt.get (
-		1.0,
-		'end'
+		vis_start,
+		vis_end
 		)
 	tkns = lexer.get_tokens_unprocessed (s)
 	for i, tkn_type, tkn in tkns:
@@ -147,6 +151,7 @@ def delete_tkns ():
 			)
 
 def syntax_switch (event):
+	
 	global extension, syntax, txt, p_syntax, switched
 	if syntax != 'text':
 		syntax = 'text'

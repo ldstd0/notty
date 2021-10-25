@@ -1,3 +1,6 @@
+# notty v1.11 build 251021
+* very imporant optimization fix
+
 # notty v1.1 build 241021
 * important fixes
 * fixed syntax bugs
