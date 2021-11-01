@@ -7,11 +7,12 @@
 	],
 	"colors": [
 		{
-		"keyword": "#ff00cc",
-		"string-literal": "#00cc66",
+		"keyword": "violet",
+		"string": "yellow",
 		"comment": "#999999",
-		"name-builtin": "#3399cc",
-		"keyword-ext": "#ff0000"
+		"builtin": "cyan",
+		"other": "orange",
+		"error": "red"
 		}
 	]
 }

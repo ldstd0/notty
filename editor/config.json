@@ -5,13 +5,9 @@
 	"theme": "dark",
 	"color-scheme": "standart",
 
-	"title": "notty",
-	"title-separator": "-",
-	"title-edited": "#",
-
-	"show-menu": "true",
-	"show-panel": "true",
-	"show-lines-panel": "true"
+	"menu": "true",
+	"panel": "true",
+	"lines": "true"
 }]
 
 }
