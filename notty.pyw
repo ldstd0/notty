@@ -9,26 +9,25 @@ from pygments.token import Token as tkn
 def info (i): p_info ['text'] = i
 
 cs_keyword, cs_name = 'violet', 'cyan'
-cs_other, cs_str, cs_err = 'orange', 'yellow', 'red'
+cs_other, cs_str = 'orange', 'yellow'
 cs_comment, cs_builtin = '#999999', 'cyan'
 
 tkn_type_to_tag = {
-	tkn.Error: 'err', tkn.Keyword: 'keyword',
+	tkn.Keyword: 'keyword', tkn.Other: 'other',
 	tkn.Keyword.Constant: 'other', tkn.Operator: 'keyword',
 	tkn.Literal.String.Single: 'str_literal',
 	tkn.Literal.String.Double: 'str_literal',
 	tkn.Comment.Single: 'comment', tkn.Comment.Hashbang: 'comment',
-	tkn.Comment.Multiline: 'comment', tkn.Other: 'other'
+	tkn.Comment.Multiline: 'comment'
 }
 
 def tkns_init ():
-	txt.tag_config ('error', foreground = cs_err)
 	txt.tag_config ('keyword', foreground = cs_keyword)
 	txt.tag_config ('str_literal', foreground = cs_str)
 	txt.tag_config ('comment', foreground = cs_comment)
 	txt.tag_config ('other', foreground = cs_other)
 
-def tkns_get (lexer): # very slow
+def tkns_get (lexer):
 	global txt
 	def get_text_coord (s: str, i: int):
 		for row_number, line in enumerate (
@@ -36,18 +35,13 @@ def tkns_get (lexer): # very slow
 			if i < len (line): return f'{row_number}.{i}'
 			i -= len (line)
 	delete_tkns ()
-	#a = "%.1f" % float(txt.index (INSERT))
-	#vis_start = float (str(int(str(a)[:-2]) - 50) + '.0')
-	#if vis_start < 0: vis_start = 1.0
-	#vis_end = float (str(int(str(a)[:-2]) + 50) + '.80')
 	s = txt.get (1.0, 'end')
 	tkns = lexer.get_tokens_unprocessed (s)
 	for i, tkn_type, tkn in tkns:
 		j = i + len (tkn)
 		tkn_type in tkn_type_to_tag and txt.tag_add (
 			tkn_type_to_tag [tkn_type],
-			get_text_coord (s, i),
-			get_text_coord (s, j)
+			get_text_coord (s, i), get_text_coord (s, j)
 			)
 	txt.edit_modified (0)
 
@@ -135,8 +129,7 @@ def edit_event (event):
 	edit = True
 	try:
 		w.title (
-			os.path.basename (path) + ' - notty'
-			if path != None
+			os.path.basename (path) + ' - notty' if path != None
 			else 'untitled - notty'
 			)
 		if path == 'editor/config.json': w.title ('config - notty')
@@ -246,21 +239,16 @@ def conf_check ():
 		)
 	for i in p_syntax, p_pos, p_info:
 		i.configure (bg = t_p_bg, fg = t_p_fg, font = t_p_font)
+	for i in s_logo, s_info, s_new, s_open, s_conf:
+		i.configure (bg = t_bg, fg = t_fg)
+	for i in s_new, s_open, s_conf: i.configure (font = 'Consolas 16')
 	with open (cs_path, 'r', encoding = 'utf-8') as out:
 		out_res = json.load (out)
 	for out_vars in out_res ['colors']:
 		cs_comment, cs_other = out_vars ['comment'], out_vars ['other']
-		cs_err, cs_keyword = out_vars ['error'], out_vars ['keyword']
+		cs_keyword = out_vars ['keyword']
 		cs_builtin, cs_str = out_vars ['builtin'], out_vars ['string']
 	tkns_init ()
-
-def manifest_check ():
-	global _ver, _bld, _br
-	with open ('editor/manifest.json', 'r', encoding = 'utf-8') as out:
-		out_res = json.load (out)
-	for out_vars in out_res ['notty']:
-		_ver, _bld = out_vars ['version'], out_vars ['build']
-		_br = out_vars ['branch']
 
 t_src = 'themes/'
 def t_switch (name):
@@ -290,7 +278,7 @@ def cs_switch (name):
 		out_res = json.load (out)
 	for out_vars in out_res ['colors']:
 		cs_comment, cs_other = out_vars ['comment'], out_vars ['other']
-		cs_err, cs_keyword = out_vars ['error'], out_vars ['keyword']
+		cs_keyword = out_vars ['keyword']
 		cs_builtin, cs_str =  out_vars ['builtin'], out_vars ['string']
 	tkns_init ()
 
@@ -388,8 +376,7 @@ def about_menu ():
 		).pack (ipady = 20)
 	about_other = Label (about_w,
 		font = t_font, bg = 'white',
-		text =
-		'copyright © 2020-2021 loadystudio\n'
+		text = 'copyright © 2020-2021 loadystudio\n'
 		'Apache License v2.0\n'
 		'v' + _ver + ' (build ' + _bld + ') ' + _br
 		).pack ()
@@ -422,32 +409,10 @@ menu_view_syntax.add_radiobutton (
 	label = 'text', command = lambda: syntax_set ('text')
 	)
 menu_view_syntax.add_separator ()
-menu_view_syntax.add_radiobutton (
-	label = 'python', command = lambda: syntax_set ('py')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'c lang', command = lambda: syntax_set ('c')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'c++ lang', command = lambda: syntax_set ('cpp')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'json', command = lambda: syntax_set ('json')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'java', command = lambda: syntax_set ('java')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'html', command = lambda: syntax_set ('html')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'css', command = lambda: syntax_set ('css')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'javascript', command = lambda: syntax_set ('js')
-	)
-menu_view_syntax.add_radiobutton (
-	label = 'markdown', command = lambda: syntax_set ('md')
+langs = ['py', 'js', 'c', 'cpp', 'css', 'html', 'json', 'java', 'md']
+for i in langs:
+	menu_view_syntax.add_radiobutton (
+		label = i, command = lambda: syntax_set (i)
 	)
 menu_file.add_command (
 	label = 'new file (ctrl+n)', command = lambda: _new (0)
@@ -528,50 +493,6 @@ def show_popup (event): popup.post (event.x_root, event.y_root)
 
 txt.bind ('<Button-3>', show_popup)
 
-def init_ui ():
-	global s_logo, s_info, s_new, s_open, s_conf
-	show_menu != 'false' and w.config (menu = menu)
-	p_pos.pack (side = 'left')
-	p_info.pack (side = 'left')
-	p_syntax.pack (side = 'right')
-	p_syntax.bind ('<Button-1>', syntax_switch)
-	show_p != 'false' and p.pack (
-		side = 'bottom', fill = 'x'
-		)
-	txt.configure (
-		yscrollcommand = verscroll.set, xscrollcommand = horscroll.set
-		)
-	left_p ['yscrollcommand'] = verscroll.set
-	s_logo = Label (w,
-		bg = t_bg, fg = t_fg,
-		font = 'Consolas 30',
-		text = 'notty'
-		)
-	s_logo.pack (ipady = 45)
-	s_info = Label (w,
-		bg = t_bg, fg = t_fg,
-		font = 'Consolas 10',
-		text = 'v' + _ver + ' (build ' + _bld + ') ' + _br + '\n'
-		'copyright © 2020-2021 loadystudio'
-		)
-	s_info.pack (ipady = 20)
-	s_new = Label (w,
-		bg = t_bg, fg = t_fg, font = 'Consolas 16',
-		text = 'new file'
-		)
-	s_open = Label (w,
-		bg = t_bg, fg = t_fg, font = 'Consolas 16',
-		text = 'open file'
-		)
-	s_conf = Label (w,
-		bg = t_bg, fg = t_fg, font = 'Consolas 16',
-		text = 'open config'
-		)
-	for i in s_logo, s_new, s_open, s_conf: i.pack()
-	s_new.bind ('<Button-1>', _new)
-	s_open.bind ('<Button-1>', _open)
-	s_conf.bind ('<Button-1>', conf_open)
-
 def init_editor_ui ():
 	global verscroll, horscroll, show_left_p, left_p, txt
 	verscroll.pack (fill = 'y', side = 'right')
@@ -583,13 +504,41 @@ def s_destroy ():
 	global s_logo, s_info, s_new, s_open, s_conf
 	for i in s_logo, s_info, s_new, s_open, s_conf: i.destroy ()
 
-def launch ():
+with open ('editor/manifest.json', 'r', encoding = 'utf-8') as out:
+	out_res = json.load (out)
+for out_vars in out_res ['notty']:
+	_ver, _bld = out_vars ['version'], out_vars ['build']
+	_br = out_vars ['branch']
+
+s_logo = Label (w, font = 'Consolas 30', text = 'notty')
+s_info = Label (w, font = 'Consolas 10',
+		text = 'v' + _ver + ' (build ' + _bld + ') ' + _br + '\n'
+		'copyright © 2020-2021 loadystudio'
+		)
+s_new = Label (w,text = 'new file')
+s_open = Label (w, text = 'open file')
+s_conf = Label (w, text = 'open config')
+
+if __name__ == '__main__':
 	conf_check ()
-	manifest_check ()
-	init_ui ()
+	show_menu != 'false' and w.config (menu = menu)
+	p_pos.pack (side = 'left')
+	p_info.pack (side = 'left')
+	p_syntax.pack (side = 'right')
+	p_syntax.bind ('<Button-1>', syntax_switch)
+	show_p != 'false' and p.pack (side = 'bottom', fill = 'x')
+	txt.configure (
+		yscrollcommand = verscroll.set, xscrollcommand = horscroll.set
+		)
+	left_p ['yscrollcommand'] = verscroll.set
+	s_logo.pack (ipady = 45)
+	s_info.pack (ipady = 20)
+	for i in s_logo, s_new, s_open, s_conf: i.pack()
+	s_new.bind ('<Button-1>', _new)
+	s_open.bind ('<Button-1>', _open)
+	s_conf.bind ('<Button-1>', conf_open)
 	w.title ('notty')
 	w.call ('wm', 'iconphoto', w._w, PhotoImage (file = 'icon.png'))
 	w.geometry ('700x400+50+50')
+	if len (sys.argv) > 1: path_open (str(sys.argv[1]))
 	w.mainloop ()
-
-if __name__ == '__main__': launch ()

@@ -11,8 +11,7 @@
 		"string": "yellow",
 		"comment": "#999999",
 		"builtin": "cyan",
-		"other": "orange",
-		"error": "red"
+		"other": "orange"
 		}
 	]
 }
