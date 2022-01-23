@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sys, os, json
 import tkinter.filedialog as fd
+import sqlite3 as sql
 import webbrowser as wb
 from tkinter import *
 from pygments.lexers import *
@@ -94,6 +95,7 @@ ftypes = [('all', '*'),
 	('java', '*.java'),
 	('markdown', '*.md')
 ]
+_username = 'user'
 onstart = True
 ext, path = None, None
 edit, switched = False, False
@@ -217,10 +219,11 @@ t_font, t_caret = 'Consolas 11', 'orange'
 t_p_bg, t_p_fg, t_p_font = 'whitesmoke', 'black', 'Consolas 10'
 
 def conf_check ():
-	global t_bg, t_fg, t_font, t_caret, t_p_bg, t_p_fg, t_p_font
+	global t_bg, t_fg, t_font, t_caret, t_p_bg, t_p_fg, t_p_font, _ver
 	with open ('editor/config.json', 'r', encoding = 'utf-8') as out:
 		conf_res = json.load (out)
 	for conf_var in conf_res ['notty']:
+		_ver = conf_var ['version']
 		show_menu, show_p = conf_var ['menu'], conf_var ['panel']
 		show_left_p = conf_var ['lines']
 		t_path = 'themes/' + conf_var ['theme'] + '.json'
@@ -239,9 +242,9 @@ def conf_check ():
 		)
 	for i in p_syntax, p_pos, p_info:
 		i.configure (bg = t_p_bg, fg = t_p_fg, font = t_p_font)
-	for i in s_logo, s_info, s_new, s_open, s_conf:
+	for i in s_logo, s_info, s_new, s_open, s_conf, s_proj:
 		i.configure (bg = t_bg, fg = t_fg)
-	for i in s_new, s_open, s_conf: i.configure (font = 'Consolas 16')
+	for i in s_new, s_open, s_conf, s_proj: i.configure (font = 'Consolas 16')
 	with open (cs_path, 'r', encoding = 'utf-8') as out:
 		out_res = json.load (out)
 	for out_vars in out_res ['colors']:
@@ -269,7 +272,7 @@ def t_switch (name):
 		bg = t_p_bg, fg = t_p_bg, font = t_p_font
 		)
 	if onstart:
-		for i in s_logo, s_info, s_new, s_open, s_conf:
+		for i in s_logo, s_info, s_new, s_open, s_conf, s_proj:
 			i.configure (bg = t_bg, fg = t_fg)
 
 def cs_switch (name):
@@ -366,28 +369,43 @@ horscroll = Scrollbar (w,
 
 def about_menu ():
 	info ('about opened')
-	about_w, about_w ['bg'] = Tk (), 'white'
+	about_w, about_w ['bg'] = Tk (), t_bg
 	about_w.geometry ('300x150+100+100')
 	about_w.resizable (width = False, height = False)
 	about_w.title ('about')
 	about_title = Label (about_w,
-		bg = 'white', font = 'Consolas 20',
-		text = 'notty'
+		bg = t_bg, font = 'Consolas 20',
+		text = 'notty', fg = t_fg
 		).pack (ipady = 20)
 	about_other = Label (about_w,
-		font = t_font, bg = 'white',
-		text = 'copyright © 2020-2021 loadystudio\n'
+		font = t_font, bg = t_bg, fg = t_fg,
+		text = '2022 © ldstd\n'
 		'Apache License v2.0\n'
-		'v' + _ver + ' (build ' + _bld + ') ' + _br
+		'v' + _ver
 		).pack ()
 
 def github_menu ():
-	wb.open ('https://github.com/loadystudio', new = 2)
+	wb.open ('https://github.com/ldstd0', new = 2)
 	info ('github opened')
 
-def loadystudio_menu ():
-	wb.open ('http://loadystudio.cf', new = 2)
-	info ('loadystudio page opened')
+def ldstd_menu ():
+	wb.open ('http://ldstd.cf', new = 2)
+	info ('ldstd page opened')
+
+def projects_menu (event):
+	info ('projects menu opened')
+	proj_w, proj_w ['bg'] = Tk (), t_bg
+	proj_w.geometry ('300x500+100+100')
+	proj_w.resizable (width = False, height = False)
+	proj_w.title ('projects')
+	proj_title = Label (proj_w,
+		bg = t_bg, fg = t_fg, font = 'Consolas 15',
+		text = _username + ' projects'
+		).pack (ipady = 20)
+	new_proj = Label (proj_w,
+		bg = t_bg, fg = t_fg, font = 'Consolas 10',
+		text = 'new project'
+		).pack (ipady = 5)
 
 menu = Menu (w)
 menu_file = Menu (menu, tearoff = 0)
@@ -447,7 +465,7 @@ menu_other.add_command (
 	label = 'github', command = github_menu
 	)
 menu_other.add_command (
-	label = 'loadystudio', command = loadystudio_menu
+	label = 'ldstd', command = ldstd_menu
 	)
 menu_other.add_separator ()
 menu_other.add_command (
@@ -504,20 +522,71 @@ def s_destroy ():
 	global s_logo, s_info, s_new, s_open, s_conf
 	for i in s_logo, s_info, s_new, s_open, s_conf: i.destroy ()
 
-with open ('editor/manifest.json', 'r', encoding = 'utf-8') as out:
-	out_res = json.load (out)
-for out_vars in out_res ['notty']:
-	_ver, _bld = out_vars ['version'], out_vars ['build']
-	_br = out_vars ['branch']
-
 s_logo = Label (w, font = 'Consolas 30', text = 'notty')
-s_info = Label (w, font = 'Consolas 10',
-		text = 'v' + _ver + ' (build ' + _bld + ') ' + _br + '\n'
-		'copyright © 2020-2021 loadystudio'
-		)
+s_info = Label (w, font = 'Consolas 10')
 s_new = Label (w,text = 'new file')
 s_open = Label (w, text = 'open file')
 s_conf = Label (w, text = 'open config')
+s_proj = Label (w, text = 'my projects')
+
+def user_select ():
+	db_con = sql.connect ('editor/users.db')
+	db_cur = db_con.cursor ()
+	u_w, u_w ['bg'] = Tk (), t_bg
+	u_w.geometry ('300x200+100+100')
+	u_w.resizable (width = False, height = False)
+	u_w.title ('auth')
+	def user_login (event):
+		global _username, s_info
+		name, pswd = u_name.get (), u_pswd.get ()
+		db_cur.execute (f"SELECT name FROM users WHERE name = '{name}'")
+		if db_cur.fetchall () == None:
+			info ('user doesnt exist')
+		elif db_cur.fetchall () != None:
+			db_cur.execute (f"SELECT password FROM users WHERE name = '{name}'")
+			try:
+				db_pswd = db_cur.fetchall ()[0][0]
+				if pswd == db_pswd:
+					info ('successful')
+					_username = name
+					u_w.destroy ()
+					s_info.configure (text = f"hello {_username}!") 
+				else:
+					info ('password incorrect')
+			except IndexError:
+				info ('user doesnt exist')
+		else: info ('error')
+	def user_new (event):
+		db_cur.execute('SELECT COUNT(*) FROM users')
+		values = db_cur.fetchone()
+		u_id = len(values) + 1
+		name, pswd = u_name.get (), u_pswd.get ()
+		db_cur.execute (f"INSERT INTO users('id', 'name', 'password') VALUES ({u_id}, '{name}', '{pswd}')")
+		db_con.commit ()
+	u_title = Label (u_w,
+		bg = t_bg, fg = t_fg, font = 'Consolas 20',
+		text = 'auth'
+		).pack (ipady = 20)
+	u_w.bind ('<Return>', user_login)
+	u_name = Entry (u_w,
+		bg = t_bg, fg = t_fg,
+		font = 'Consolas 10', insertbackground = t_caret
+		)
+	u_pswd = Entry (u_w,
+		bg = t_bg, fg = t_fg,
+		font = 'Consolas 10', insertbackground = t_caret
+		)
+	u_login = Label (u_w,
+		bg = t_bg, fg = t_fg, font = 'Consolas 10',
+		text = 'login'
+		)
+	u_new = Label (u_w,
+		bg = t_bg, fg = t_fg, font = 'Consolas 10',
+		text = 'create new account'
+		)
+	for i in u_name, u_pswd, u_login, u_new: i.pack()
+	u_login.bind ('<Button-1>', user_login)
+	u_new.bind ('<Button-1>', user_new)
 
 if __name__ == '__main__':
 	conf_check ()
@@ -533,12 +602,14 @@ if __name__ == '__main__':
 	left_p ['yscrollcommand'] = verscroll.set
 	s_logo.pack (ipady = 45)
 	s_info.pack (ipady = 20)
-	for i in s_logo, s_new, s_open, s_conf: i.pack()
+	for i in s_logo, s_new, s_open, s_conf, s_proj: i.pack()
 	s_new.bind ('<Button-1>', _new)
 	s_open.bind ('<Button-1>', _open)
 	s_conf.bind ('<Button-1>', conf_open)
+	s_proj.bind ('<Button-1>', projects_menu)
 	w.title ('notty')
 	w.call ('wm', 'iconphoto', w._w, PhotoImage (file = 'icon.png'))
 	w.geometry ('700x400+50+50')
+	user_select ()
 	if len (sys.argv) > 1: path_open (str(sys.argv[1]))
 	w.mainloop ()
