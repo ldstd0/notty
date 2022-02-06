@@ -15,7 +15,7 @@
 	],
 	"panel": [
 		{
-		"bg": "whitesmoke",
+		"bg": "white",
 		"fg": "black",
 		"font": "Consolas 10"
 		}
