@@ -1,8 +1,8 @@
 {
 	"info": [
 		{ 
-		"name": "light",
-		"author": "loadystudio"
+		"name": "milk",
+		"author": "ldstd"
 		}
 	],
 	"textbox": [
@@ -18,6 +18,15 @@
 		"bg": "whitesmoke",
 		"fg": "black",
 		"font": "Consolas 10"
+		}
+	],
+	"syntax": [
+		{
+		"keyword": "violet",
+		"string": "yellow",
+		"comment": "#999999",
+		"builtin": "cyan",
+		"other": "orange"
 		}
 	]
 }
