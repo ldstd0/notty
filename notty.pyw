@@ -4,15 +4,13 @@ import tkinter.filedialog as fd
 import sqlite3 as sql
 import webbrowser as wb
 from tkinter import *
-from pygments.lexers import *
-from pygments.token import Token as tkn
 
-s_kw, s_name, s_other = 'violet', 'cyan', 'orange'
-s_comment, s_builtin, s_str = '#999999', 'cyan', 'yellow'
+import syntax as s
+
 t_bg, t_fg, t_font, t_caret = '#222222', 'silver', 'Consolas 11', 'orange'
 t_p_bg, t_p_fg, t_p_font = 'whitesmoke', 'black', 'Consolas 10'
-_name, syntax, onstart, _auth = 'user', 'text', True, False
-ext, path, edit, switched = None, None, False, False
+user, sntx, onstart, _auth = 'user', 'text', True, False
+ext, path, edit, sw = None, None, False, False
 show_m, show_p, show_left_p, show_e = 'true', 'true', 'true', 'true'
 p_hided, left_p_hided, e_hided = False, False, False
 t_src = 'themes/'
@@ -21,74 +19,17 @@ ftypes = [('all', '*'),
 	('c++ lang', '*.cpp'), ('css', '*.css'), ('html', '*.html'),
 	('json', '*.json'), ('java', '*.java'), ('markdown', '*.md')
 ]
-tkn_type_to_tag = {
-	tkn.Keyword: 'keyword', tkn.Other: 'other',
-	tkn.Keyword.Constant: 'other', tkn.Operator: 'keyword',
-	tkn.Literal.String.Single: 'str_literal',
-	tkn.Literal.String.Double: 'str_literal',
-	tkn.Comment.Single: 'comment', tkn.Comment.Hashbang: 'comment',
-	tkn.Comment.Multiline: 'comment'
-}
+
+def s_sw (event): s.sw (txt, ext, sntx, sw)
+def s_get (l):
+	global txt
+	s.get (txt, l, sw)
+
+def s_set (name):
+	s.set (txt, name)
+	sntx, p_sntx ['text'] = name, name
 
 def info (i): p_info ['text'] = i
-
-def tkns_init ():
-	txt.tag_config ('keyword', foreground = s_kw)
-	txt.tag_config ('str_literal', foreground = s_str)
-	txt.tag_config ('comment', foreground = s_comment)
-	txt.tag_config ('other', foreground = s_other)
-def tkns_get (lexer):
-	global txt
-	def get_text_coord (s: str, i: int):
-		for row_number, line in enumerate (
-			s.splitlines (keepends = True), 1):
-			if i < len (line): return f'{row_number}.{i}'
-			i -= len (line)
-	delete_tkns ()
-	s = txt.get (1.0, END)
-	tkns = lexer.get_tokens_unprocessed (s)
-	for i, tkn_type, tkn in tkns:
-		j = i + len (tkn)
-		tkn_type in tkn_type_to_tag and txt.tag_add (
-			tkn_type_to_tag [tkn_type],
-			get_text_coord (s, i), get_text_coord (s, j)
-			)
-	txt.edit_modified (0)
-def delete_tkns ():
-	for tag in txt.tag_names (): txt.tag_remove (tag, 1.0, END)
-
-def syntax_switch (event):
-	global ext, syntax, txt, p_syntax, switched
-	if syntax != 'text':
-		syntax, switched = 'text', True
-		delete_tkns ()
-	elif switched:
-		if ext != None: syntax = ext [1:]
-		else: return
-		switched = False
-		if ext == '.py' or '.pyw':
-			syntax = 'py' ; tkns_get (PythonLexer())
-		elif ext == '.js': tkns_get (JavascriptLexer())
-		elif ext == '.c': tkns_get (CLexer())
-		elif ext == '.cpp': tkns_get (CppLexer())
-		elif ext == '.html': tkns_get (HtmlLexer())
-		elif ext == '.css': tkns_get (CssLexer())
-		elif ext == '.json': tkns_get (JsonLexer())
-		elif ext == '.md': tkns_get (MarkdownLexer())
-		elif ext == '.java': tkns_get (JavaLexer())
-def syntax_set (name):
-	global syntax, p_syntax, txt
-	syntax, p_syntax ['text'] = name, name
-	if name == 'text': delete_tkns()
-	elif name == 'py': tkns_get (PythonLexer ())
-	elif name == 'c': tkns_get (CLexer ())
-	elif name == 'cpp': tkns_get (CppLexer ())
-	elif name == 'json': tkns_get (JsonLexer ())
-	elif name == 'html': tkns_get (HtmlLexer ())
-	elif name == 'css': tkns_get (CssLexer ())
-	elif name == 'js': tkns_get (JavascriptLexer ())
-	elif name == 'md': tkns_get(MarkdownLexer ())
-	elif name == 'java': tkns_get(JavaLexer ())
 
 def txt_clr (): txt.delete (1.0, END)
 def txt_ins (t): txt.insert (1.0, t)
@@ -106,16 +47,10 @@ def edit_event (event):
 	left_p.delete ('1.0', END)
 	left_p.insert ('1.0', lines_p)
 	left_p ['state'] = 'disabled'
-	if switched == False:
-		if syntax == 'py' or syntax == 'pyw': tkns_get (PythonLexer())
-		elif syntax == 'js': tkns_get (JavascriptLexer())
-		elif syntax == 'c': tkns_get (CLexer())
-		elif syntax == 'cpp': tkns_get (CppLexer())
-		elif syntax == 'html': tkns_get (HtmlLexer())
-		elif syntax == 'css': tkns_get (CssLexer())
-		elif syntax == 'json': tkns_get (JsonLexer())
-		elif syntax == 'md': tkns_get (MarkdownLexer())
-		elif syntax == 'java': tkns_get (JavaLexer())
+	if sw == False:
+		if sntx=='text': return
+		elif sntx == 'py' or sntx == 'pyw': s_get ('py')
+		else: s_get (sntx)
 	edit = True
 	try:
 		w.title (
@@ -131,12 +66,12 @@ def edit_event (event):
 def _exit (event): w.destroy ()
 def _new (event):
 	global path, onstart
-	s_exit () ; init () ;syntax_switch (0)
+	s_del () ; init () ; s_sw(0)
 	txt_clr () ; info ('new tab opened')
 	path, onstart = None, False
 def path_open (fpath = None):
-	global path, edit, ext, syntax, p_syntax
-	s_exit () ; init ()
+	global path, edit, ext, sntx, p_sntx
+	s_del () ; init ()
 	if not fpath:
 		path = fd.Open (w, filetypes = ftypes).show ()
 		if path == '': return
@@ -151,9 +86,9 @@ def path_open (fpath = None):
 			path = None ; txt_clr () ; info ('file not found') ; return
 	edit, onstart = False, False
 	ext = os.path.splitext (os.path.basename (path)) [1]
-	syntax, p_syntax ['text'] = ext [1:], syntax
+	sntx, p_sntx ['text'] = ext [1:], sntx
 	info (path + ' opened')
-	if ext == '': syntax, p_syntax ['text'] = 'text', 'text'
+	if ext == '': sntx, p_sntx ['text'] = 'text', 'text'
 def _open (event): path_open ()
 def _save (event):
 	global path, edit
@@ -202,11 +137,11 @@ def conf_check ():
 	txt.configure (
 		bg = t_bg, fg = t_fg, font = t_font, insertbackground = t_caret
 		)
-	for i in p_syntax, p_pos, p_info:
+	for i in p_sntx, p_pos, p_info:
 		i.configure (bg = t_p_bg, fg = t_p_fg, font = t_p_font)
 	for i in s_logo, s_new, s_open, s_conf, s_proj: i['bg'], i['fg'] = t_bg, t_fg
 	for i in s_new, s_open, s_conf, s_proj: i.configure (font = 'Consolas 16')
-	tkns_init ()
+	s.init (txt)
 def t_set (name):
 	t_path = 'themes/' + name + '.json'
 	with open (t_path, 'r', encoding = 'utf-8') as out: res = json.load (out)
@@ -223,11 +158,11 @@ def t_set (name):
 	txt.configure (
 		bg = t_bg, fg = t_fg, font = t_font, insertbackground = t_caret
 		)
-	p_syntax.configure (bg = t_p_bg, fg = t_p_bg, font = t_p_font)
+	p_s_del.configure (bg = t_p_bg, fg = t_p_bg, font = t_p_font)
 	if onstart:
 		for i in s_logo, s_new, s_open, s_conf, s_proj:
 			i.configure (bg = t_bg, fg = t_fg)
-	tkns_init ()
+	s.init (txt)
 
 w, w ['bg'] = Tk (), t_bg
 w.title ('notty') ; w.minsize (700, 400)
@@ -263,7 +198,7 @@ def p_hide ():
 	global p_hided, p
 	if p_hided == False: p.pack_forget () ; p_hided = True
 	else:
-		for i in verscroll, horscroll, left_p, txt: i.pack_forget ()
+		for i in vscroll, hscroll, left_p, txt: i.pack_forget ()
 		p.pack (side = 'bottom', fill = 'x')
 		onstart == False and init ()
 		p_hided = False
@@ -279,25 +214,25 @@ def e_hide ():
 	global e_hided, e
 	if e_hided == False: e.pack_forget () ; e_hided = True
 	else:
-		for i in verscroll, horscroll, left_p, txt: i.pack_forget ()
+		for i in vscroll, hscroll, left_p, txt: i.pack_forget ()
 		onstart == False and init ()
 		p_hided = False
 
 p_pos = Label (p, bg = t_p_bg, fg = t_p_fg, font = t_p_font)
 p_info = Label (p, bg = t_p_bg, fg = t_p_fg, font = t_p_font)
-p_syntax = Label (p, bg = t_p_bg, fg = t_p_fg, font = t_p_font)
+p_sntx = Label (p, bg = t_p_bg, fg = t_p_fg, font = t_p_font)
 p_user = Label (p, bg = t_p_bg, fg = t_p_fg, font = t_p_font)
 left_p = Text (w,
 	bg = 'gray', fg = 'whitesmoke', relief = 'flat',
 	font = t_font, highlightthickness = 0, width = 6
 	)
 e = Frame (w, bg = 'whitesmoke', relief = 'flat', width = 100)
-verscroll = Scrollbar (w,
+vscroll = Scrollbar (w,
 	background = 'whitesmoke',
 	relief = 'flat', width = 15,
 	command = lambda *args: (txt.yview (*args), left_p.yview (*args))
 	)
-horscroll = Scrollbar (w,
+hscroll = Scrollbar (w,
 	background = 'whitesmoke', relief = 'flat',
 	command = txt.xview, orient = 'horizontal'
 	)
@@ -334,7 +269,7 @@ def u_select ():
 	u_w.resizable (width = False, height = False)
 	u_w.title ('auth')
 	def u_login (event):
-		global _name, _auth
+		global user, _auth
 		name, pswd = u_name.get (), u_pswd.get ()
 		cur.execute (f"SELECT name FROM users WHERE name = '{name}'")
 		if cur.fetchall () == None: info ('user doesnt exist')
@@ -343,8 +278,8 @@ def u_select ():
 			try:
 				db_pswd = cur.fetchall ()[0][0]
 				if str (db_pswd) == str (pswd):
-					_name = name ; u_w.destroy () ; _auth = True
-					p_user ['text'] = _name
+					user = name ; u_w.destroy () ; _auth = True
+					p_user ['text'] = user
 				else: info ('password incorrect')
 			except IndexError: info ('user doesnt exist')
 		else: info ('error')
@@ -387,7 +322,7 @@ def _proj (event):
 			#for i in proj_name, proj_lang, proj_share: i.pack ()
 	if _auth != True: u_select ()
 	else:
-		global _name
+		global user
 		proj_w, proj_w ['bg'] = Tk (), t_bg
 		proj_w.geometry ('300x500+100+100')
 		proj_w.resizable (width = False, height = False)
@@ -409,17 +344,17 @@ m_view.add_command (label = 'show/hide panel', command = p_hide)
 m_view.add_command (label = 'show/hide lines panel', command = left_p_hide)
 m_view.add_command (label = 'show/hide explorer', command = e_hide)
 m_view.add_separator ()
-m_view_s.add_radiobutton (label = 'text', command = lambda: syntax_set ('text'))
+m_view_s.add_radiobutton (label = 'text', command = lambda: s_set ('text'))
 m_view_s.add_separator ()
-m_view_s.add_radiobutton (label = 'python', command = lambda: syntax_set ('py'))
-m_view_s.add_radiobutton (label = 'javascript', command = lambda: syntax_set ('js'))
-m_view_s.add_radiobutton (label = 'c lang', command = lambda: syntax_set ('c'))
-m_view_s.add_radiobutton (label = 'c++ lang', command = lambda: syntax_set ('cpp'))
-m_view_s.add_radiobutton (label = 'css', command = lambda: syntax_set ('css'))
-m_view_s.add_radiobutton (label = 'html', command = lambda: syntax_set ('html'))
-m_view_s.add_radiobutton (label = 'json', command = lambda: syntax_set ('json'))
-m_view_s.add_radiobutton (label = 'java', command = lambda: syntax_set ('java'))
-m_view_s.add_radiobutton (label = 'markdown', command = lambda: syntax_set ('md'))
+m_view_s.add_radiobutton (label = 'python', command = lambda: s_set ('py'))
+m_view_s.add_radiobutton (label = 'javascript', command = lambda: s_set ('js'))
+m_view_s.add_radiobutton (label = 'c lang', command = lambda: s_set ('c'))
+m_view_s.add_radiobutton (label = 'c++ lang', command = lambda: s_set ('cpp'))
+m_view_s.add_radiobutton (label = 'css', command = lambda: s_set ('css'))
+m_view_s.add_radiobutton (label = 'html', command = lambda: s_set ('html'))
+m_view_s.add_radiobutton (label = 'json', command = lambda: s_set ('json'))
+m_view_s.add_radiobutton (label = 'java', command = lambda: s_set ('java'))
+m_view_s.add_radiobutton (label = 'markdown', command = lambda: s_set ('md'))
 m_file.add_command (label = 'new file', command = lambda: _new (0))
 m_file.add_command (label = 'open file', command = lambda: _open (0))
 m_file.add_command (label = 'save file', command = lambda: _save (0))
@@ -443,32 +378,29 @@ m.add_cascade (label = 'other', menu = m_other)
 m_view.add_cascade (label = 'syntax', menu = m_view_s)
 m_pref.add_cascade (label = 'themes', menu = m_pref_t)
 
-def txt_cut (): txt_copy () ; txt_del ()
-def txt_paste (): txt.insert (INSERT, txt.clipboard_get ())
-def txt_copy ():
-	sel = txt.tag_ranges (SEL)
-	try: sel and txt.clipboard_clear (), txt.clipboard_append (txt.get (*sel))
-	except TypeError: return
-def txt_del ():
-	sel = txt.tag_ranges (SEL)
-	sel and txt.delete (*sel)
-
-popup = Menu (w, tearoff = 0, bg = 'whitesmoke')
-popup.add_command (label = 'cut', command = txt_cut)
-popup.add_command (label = 'copy', command = txt_copy)
-popup.add_command (label = 'paste', command = txt_paste)
-popup.add_command (label = 'delete', command = txt_del)
-def show_popup (event): popup.post (event.x_root, event.y_root)
-txt.bind ('<Button-3>', show_popup)
-
-def init ():
-	global verscroll, horscroll, show_left_p, left_p, txt
-	verscroll.pack (fill = 'y', side = 'right')
-	horscroll.pack (fill = 'x', side = 'bottom')
+def txt_cut():txt_copy();txt_del()
+def txt_paste():txt.insert(INSERT,txt.clipboard_get())
+def txt_copy():
+	txt.clipboard_clear(),txt.clipboard_append(txt.get(*txt.tag_ranges(SEL)))
+def txt_del():txt.delete(*txt.tag_ranges(SEL))
+def txt_find():
+	wb.open('https://google.com/search?q='+txt.get(*txt.tag_ranges(SEL)),new=2)
+popup=Menu(w,tearoff=0,bg='whitesmoke')
+popup.add_command(label='cut',command=txt_cut)
+popup.add_command(label='copy',command=txt_copy)
+popup.add_command(label='paste',command=txt_paste)
+popup.add_command(label='delete',command=txt_del)
+popup.add_command(label='find',command=txt_find)
+def show_popup(event):popup.post(event.x_root,event.y_root)
+txt.bind('<Button-3>',show_popup)
+def init():
+	global vscroll,hscroll,show_left_p,left_p,txt
+	vscroll.pack (fill = 'y', side = 'right')
+	hscroll.pack (fill = 'x', side = 'bottom')
 	show_e != 'false' and e.pack (side = 'left', fill = 'y')
 	show_left_p != 'false' and left_p.pack (fill = 'y', side = 'left')
 	txt.pack (side = 'left', fill = 'both', expand = True)
-def s_exit ():
+def s_del ():
 	for i in s_logo, s_new, s_open, s_conf, s_proj: i.destroy ()
 
 s_logo = Label (w, font = 'Consolas 30', text = 'notty')
@@ -481,14 +413,14 @@ s_conf.bind ('<Button-1>', _conf) ; s_proj.bind ('<Button-1>', _proj)
 
 if __name__ == '__main__':
 	conf_check ()
-	txt['yscrollcommand'], txt['xscrollcommand'] = verscroll.set, horscroll.set
-	left_p ['yscrollcommand'] = verscroll.set
+	txt ['yscrollcommand'], txt ['xscrollcommand'] = vscroll.set, hscroll.set
+	left_p ['yscrollcommand'] = vscroll.set
 	show_m != 'false' and w.config (menu = m)
 	for i in p_pos, p_info: i.pack (side = 'left')
-	for i in p_syntax, p_user: i.pack (side = 'right')
-	p_syntax.bind ('<Button-1>', syntax_switch)
+	for i in p_sntx, p_user: i.pack (side = 'right')
+	p_sntx.bind ('<Button-1>', s_sw)
 	show_p != 'false' and p.pack (side = 'bottom', fill = 'x')
 	s_logo.pack (ipady = 50)
 	for i in s_logo, s_new, s_open, s_conf, s_proj: i.pack()
-	if len (sys.argv) > 1: path_open (str(sys.argv[1]))
+	if len (sys.argv) > 1: path_open (str (sys.argv [1]))
 	w.mainloop ()
